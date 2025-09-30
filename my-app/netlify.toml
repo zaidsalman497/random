@@ -1,6 +1,0 @@
-[dev]
-	command = "npm start"
-
-	targetPort = 3000
-
-	framework = "create-react-app"
