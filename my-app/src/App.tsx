@@ -9,11 +9,11 @@ function App() {
 		try {
 			const res = await fetch('/hello.json');
 			if (!res.ok) {
-				setMsg('Error fetching local fallback');
+				setMsg('Error fetching local fallback.');
 				return;
 			}
 			const data = await res.json();
-			setMsg(data.message || 'No message in fallback');
+			setMsg(data.message || 'No message in fallback.');
 		} catch (err) {
 			console.error('Local fallback fetch failed', err);
 			setMsg('Error fetching local fallback');
