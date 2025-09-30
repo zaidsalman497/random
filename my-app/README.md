@@ -8,16 +8,10 @@ Run locally:
 npm install
 ```
 
-2. Start Netlify Dev (serves frontend + functions)
+2. Start Netlify 
 
 ```
-npm run netlify
+npm start
 ```
 
-Build for production:
 
-```
-npm run build
-```
-
-Deploy to Netlify: push to GitHub and import the repo in Netlify.
