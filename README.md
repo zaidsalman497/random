@@ -1,3 +1,3 @@
-# random
+#
 
-some readme so wjuqufhqhufqfw also im Zaid
+Repository for React + Netlify Functions example.
