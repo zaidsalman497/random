@@ -7,16 +7,16 @@ function App() {
 
 	const fetchMessage = async () => {
 		try {
-			const res = await fetch('/hello.json');
+			const res = await fetch('/.netlify/functions/hello');
 			if (!res.ok) {
-				setMsg('Error fetching local fallback.');
+				setMsg('Error fetching message from function.');
 				return;
 			}
 			const data = await res.json();
-			setMsg(data.message || 'No message in fallback.');
+			setMsg(data.message || 'No message from function.');
 		} catch (err) {
-			console.error('Local fallback fetch failed', err);
-			setMsg('Error fetching local fallback');
+			console.error('Function fetch failed', err);
+			setMsg('Error fetching message from function');
 		}
 	};
 
