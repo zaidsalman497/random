@@ -8,6 +8,8 @@ function Navbar() {
         <Button color="inherit" component={Link} to="/">Home</Button>
         <Button color="inherit" component={Link} to="/meme">Meme Generator</Button>
         <Button color="inherit" component={Link} to="/fact">Random Fact</Button>
+        <Button color="inherit" component={Link} to="/roast">Roast Battle</Button>
+        <Button color="inherit" component={Link} to="/battle">Battle</Button>
       </Toolbar>
     </AppBar>
   );

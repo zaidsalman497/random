@@ -3,6 +3,8 @@ import Navbar from "./Navbar";
 import Home from "./pages/Home";
 import Meme from "./pages/Meme";
 import Fact from "./pages/Fact";
+import Roast from "./pages/Roast";
+import Battle from "./pages/Battle";
 
 function App() {
   return (
@@ -12,6 +14,8 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/meme" element={<Meme />} />
         <Route path="/fact" element={<Fact />} />
+        <Route path="/roast" element={<Roast />} />
+        <Route path="/battle" element={<Battle />} />
       </Routes>
     </BrowserRouter>
   );
