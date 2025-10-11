@@ -44,6 +44,14 @@ function Roast() {
         method: "POST",
         body: JSON.stringify(userData)
       });
+
+      if (!roastRes.ok) {
+        const roastError = await roastRes.json();
+        setError(`Roast generation failed: ${roastError.error || 'Unknown error'}`);
+        setLoading(false);
+        return;
+      }
+
       const roast = await roastRes.json();
 
       // Step 3: Generate image
@@ -51,13 +59,21 @@ function Roast() {
         method: "POST",
         body: JSON.stringify(userData)
       });
-      const imageData = await imageRes.json();
+
+      if (!imageRes.ok) {
+        const imageError = await imageRes.json();
+        console.warn('Image generation failed:', imageError);
+        // Continue without image - it's optional
+      }
+
+      const imageData = imageRes.ok ? await imageRes.json() : { imageUrl: '' };
 
       setRoastData(roast);
-      setImageUrl(imageData.imageUrl);
+      setImageUrl(imageData.imageUrl || '');
 
     } catch (err) {
-      setError("Something went wrong!");
+      console.error('Error:', err);
+      setError(`Something went wrong: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }

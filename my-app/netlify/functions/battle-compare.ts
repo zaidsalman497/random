@@ -20,23 +20,17 @@ const handler: Handler = async (event) => {
       messages: [
         {
           role: "system",
-          content: "You are a funny gaming commentator who compares two Roblox players. Make it funny but friendly!"
+          content: "You're a hype gaming commentator calling a friendly match between Roblox players. Think sports commentator energy mixed with gamer humor. Be entertaining, use natural language, crack jokes, make references to their stats in creative ways. Keep it playful and fun - like commentary your friends would laugh at. No corporate-speak or robotic analysis. Choose the player who has been grinding more or has more badges, do a badge to grinding ratio"
         },
         {
           role: "user",
-          content: `Compare these two Roblox players:
+          content: `Alright, we got ${player1.username} vs ${player2.username}!
 
-Player 1: ${player1.username}
-- Account age: ${player1.accountAgeDays} days
-- Badges: ${player1.badgeCount}
-- Verified: ${player1.hasVerifiedBadge ? "Yes" : "No"}
+${player1.username} has been grinding for ${player1.accountAgeDays} days, snagged ${player1.badgeCount} badges, ${player1.hasVerifiedBadge ? 'and yeah they got that verified checkmark' : "but no verified badge yet"}.
 
-Player 2: ${player2.username}
-- Account age: ${player2.accountAgeDays} days
-- Badges: ${player2.badgeCount}
-- Verified: ${player2.hasVerifiedBadge ? "Yes" : "No"}
+Meanwhile ${player2.username} is sitting at ${player2.accountAgeDays} days played, ${player2.badgeCount} badges collected, ${player2.hasVerifiedBadge ? 'plus they got verified' : "still waiting on that verification"}.
 
-Who's better and why?`
+Who takes this W? Give me the commentary!`
         }
       ],
       response_format: {

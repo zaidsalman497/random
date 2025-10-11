@@ -1,7 +1,16 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(netlify dev:*)",
+      "Bash(timeout 10 bash -c 'while ! curl -s http://localhost:8888 > /dev/null 2>&1; do sleep 1; done; echo \"\"Server is ready\"\"')",
+      "Bash(curl:*)",
+      "Bash(/dev/null)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(taskkill:*)",
+      "Bash(pkill:*)"
     ],
     "deny": [],
     "ask": []

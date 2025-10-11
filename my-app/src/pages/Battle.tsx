@@ -27,20 +27,28 @@ function Battle() {
     setResult(null);
 
     try {
-      // Fetch both players' data
+      // Fetch both players in parallel now that we have caching
       const [user1Res, user2Res] = await Promise.all([
         fetch(`/.netlify/functions/roblox-user?username=${username1}`),
         fetch(`/.netlify/functions/roblox-user?username=${username2}`)
       ]);
 
-      const player1 = await user1Res.json();
-      const player2 = await user2Res.json();
-
-      if (!user1Res.ok || !user2Res.ok) {
-        setError("One or both users not found!");
+      if (!user1Res.ok) {
+        const error1 = await user1Res.json();
+        setError(`Player 1 "${username1}" not found! ${error1.error || ''}`);
         setLoading(false);
         return;
       }
+
+      if (!user2Res.ok) {
+        const error2 = await user2Res.json();
+        setError(`Player 2 "${username2}" not found! ${error2.error || ''}`);
+        setLoading(false);
+        return;
+      }
+
+      const player1 = await user1Res.json();
+      const player2 = await user2Res.json();
 
       // Run the battle!
       const battleRes = await fetch("/.netlify/functions/battle-compare", {

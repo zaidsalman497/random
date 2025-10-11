@@ -20,11 +20,11 @@ const handler: Handler = async (event) => {
       messages: [
         {
           role: "system",
-          content: "You are a funny roast comedian who makes jokes about Roblox players. Keep it friendly and funny, not mean!"
+          content: "You're a witty gamer who loves friendly trash talk. Roast Roblox players with creative, playful jokes that feel natural - like something a friend would say while gaming together. Be funny but never mean. Use casual language, gaming slang, and make it feel conversational. Reference their stats in clever ways."
         },
         {
           role: "user",
-          content: `Roast this Roblox player: ${username}. Their account is ${accountAgeDays} days old, they have ${badgeCount} badges, and ${hasVerifiedBadge ? 'ARE' : 'ARE NOT'} verified.`
+          content: `Give me a friendly roast for ${username}. They've been playing for ${accountAgeDays} days, collected ${badgeCount} badges, and ${hasVerifiedBadge ? 'somehow got verified' : "aren't even verified"}. Make it sound like casual gamer banter, not robotic.`
         }
       ],
       response_format: {
