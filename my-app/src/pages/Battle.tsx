@@ -15,6 +15,7 @@ function Battle() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<BattleResult | null>(null);
   const [error, setError] = useState("");
+  const [battleImageUrl, setBattleImageUrl] = useState("");
 
   const handleBattle = async () => {
     if (!username1 || !username2) {
@@ -25,6 +26,7 @@ function Battle() {
     setLoading(true);
     setError("");
     setResult(null);
+    setBattleImageUrl("");
 
     try {
       // Fetch both players in parallel now that we have caching
@@ -58,6 +60,24 @@ function Battle() {
 
       const battleData = await battleRes.json();
       setResult(battleData);
+
+      // Generate battle image for the winner
+      const winnerData = battleData.winner === player1.username ? player1 : player2;
+      const winnerScore = battleData.winner === player1.username ? battleData.player1Score : battleData.player2Score;
+
+      const imageRes = await fetch("/.netlify/functions/generate-image", {
+        method: "POST",
+        body: JSON.stringify({
+          username: winnerData.username,
+          rating: winnerScore >= 8 ? "Legend" : winnerScore >= 5 ? "Pro" : "Noob",
+          accountAgeDays: winnerData.accountAgeDays
+        })
+      });
+
+      if (imageRes.ok) {
+        const imageData = await imageRes.json();
+        setBattleImageUrl(imageData.imageUrl || "");
+      }
 
     } catch (err) {
       setError("Battle crashed! Try again.");
@@ -142,6 +162,17 @@ function Battle() {
             </p>
           </CardContent>
         </Card>
+      )}
+
+      {battleImageUrl && (
+        <div style={{ marginTop: "20px", textAlign: "center" }}>
+          <h3>Victory Image 🎉</h3>
+          <img
+            src={battleImageUrl}
+            alt="Battle winner meme"
+            style={{ maxWidth: "100%", borderRadius: "8px" }}
+          />
+        </div>
       )}
     </div>
   );

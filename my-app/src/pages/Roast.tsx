@@ -57,7 +57,11 @@ function Roast() {
       // Step 3: Generate image
       const imageRes = await fetch("/.netlify/functions/generate-image", {
         method: "POST",
-        body: JSON.stringify(userData)
+        body: JSON.stringify({
+          username: userData.username,
+          rating: roast.rating,
+          accountAgeDays: userData.accountAgeDays
+        })
       });
 
       if (!imageRes.ok) {

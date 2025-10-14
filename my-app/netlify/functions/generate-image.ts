@@ -38,6 +38,7 @@ const handler: Handler = async (event) => {
     };
 
   } catch (error) {
+    console.error("Error generating image:", error);
     return {
       statusCode: 500,
       body: JSON.stringify({ error: "Failed to generate image" })
