@@ -10,6 +10,7 @@ function Navbar() {
         <Button color="inherit" component={Link} to="/fact">Random Fact</Button>
         <Button color="inherit" component={Link} to="/roast">Roast Battle</Button>
         <Button color="inherit" component={Link} to="/battle">Battle</Button>
+        <Button color="inherit" component={Link} to="/game-builder">Game Builder</Button>
       </Toolbar>
     </AppBar>
   );

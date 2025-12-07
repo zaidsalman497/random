@@ -18,8 +18,7 @@ const handler: Handler = async (event) => {
     // Create a funny image prompt based on user stats
     const prompt = `A funny cartoon meme about a Roblox player named ${username}.
     They are a "${rating}" level player.
-    The meme should show a blocky Roblox character with text overlay making a joke about having ${accountAgeDays} days of playtime.
-    Make it colorful, funny, and gaming-themed. No real people, cartoon style only.`;
+    The meme should show a blocky Roblox character with text overlay making a joke about having ${accountAgeDays} days of playtime.`;
 
     const response = await openai.images.generate({
       model: "dall-e-3",

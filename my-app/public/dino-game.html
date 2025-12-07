@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dino Runner</title>
+  <style>
+    :root { --bg: #f7f7f7; --panel: #ffffff; --ink: #333; }
+    body { margin: 0; background: var(--bg); font-family: Arial, Helvetica, sans-serif; color: var(--ink); }
+    #gameWrap { position: relative; width: 820px; margin: 16px auto; }
+    #gameCanvas { display: block; border: 2px solid #333; background: white; }
+    #scoreBar { display: flex; align-items: center; justify-content: space-between; padding: 8px 4px 6px; }
+    #score, #high { font-size: 18px; font-weight: bold; }
+    #title { font-weight: 800; letter-spacing: 0.5px; }
+    /* Overlay */
+    #overlay {
+      position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.35);
+    }
+    #menu {
+      background: var(--panel); border-radius: 12px; min-width: 320px; padding: 18px; border: 2px solid #333;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    }
+    #menu h3 { margin: 0 0 10px; font-size: 22px; }
+    #menu p { margin: 4px 0 12px; color: #555; font-size: 14px; }
+    .row { display: flex; gap: 8px; justify-content: flex-end; }
+    button.btn { padding: 8px 12px; border: 2px solid #333; background: #fff; cursor: pointer; border-radius: 8px; font-weight: 700; }
+    button.btn.primary { background: #1976d2; color: #fff; border-color: #0f4e8f; }
+    button.btn:active { transform: translateY(1px); }
+  </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="robots" content="noindex" />
+  <meta name="description" content="Simple Dino Runner game" />
+  <meta name="color-scheme" content="light only" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+</head>
+<body>
+  <div id="gameWrap">
+    <div id="scoreBar">
+      <div id="title">Dino Runner</div>
+      <div>
+        <span id="high">High: 0</span>
+        <span style="display:inline-block;width:14px"></span>
+        <span id="score">Score: 0</span>
+      </div>
+    </div>
+    <canvas id="gameCanvas" width="800" height="200"></canvas>
+    <div id="overlay">
+      <div id="menu">
+        <h3 id="menuTitle">Paused</h3>
+        <p>Space/Click to jump • P to pause • R to restart</p>
+        <div class="row">
+          <button id="resumeBtn" class="btn primary">Resume</button>
+          <button id="restartBtn" class="btn">Restart</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Central configuration that the AI can modify
+    // CONFIG_START
+    const CONFIG = {
+      gameSpeed: 8,
+      gravity: 0.6,
+      jumpPower: -15,
+      dinoColor: '#0000ff',
+      background: '#ffffff',
+      groundColor: '#333333',
+      obstacleColor: '#ff5252',
+      obstacleSpawnRate: 60,
+      obstacleWidth: 50,
+      obstacleHeight: 50,
+      doubleJump: true};
+    // CONFIG_END
+
+    // Runtime state
+    let score = 0;
+    let highScore = 0;
+    let paused = false;
+    let gameOver = false;
+
+    // Dino
+    const dino = {
+      x: 50,
+      y: 150,
+      width: 20,
+      height: 40,
+      dy: 0,
+      jumping: false,
+      jumpsRemaining: 1,
+      color: CONFIG.dinoColor
+    };
+
+    // Scenery and obstacles
+    const clouds = [];
+    let obstacles = [];
+    let frameCount = 0;
+
+    function resetGame() {
+      score = 0;
+      document.getElementById('score').textContent = 'Score: 0';
+      gameOver = false;
+      obstacles = [];
+      frameCount = 0;
+      dino.x = 50; dino.y = 150; dino.dy = 0;
+      dino.jumping = false; dino.jumpsRemaining = CONFIG.doubleJump ? 2 : 1;
+    }
+
+    function setPaused(value) {
+      paused = value;
+      const overlay = document.getElementById('overlay');
+      const title = document.getElementById('menuTitle');
+      if (value) {
+        overlay.style.display = 'flex';
+        title.textContent = gameOver ? 'Game Over' : 'Paused';
+      } else {
+        overlay.style.display = 'none';
+      }
+    }
+
+    // Jump
+    function jump() {
+      if (paused || gameOver) return;
+      if (!CONFIG.doubleJump) {
+        if (!dino.jumping) {
+          dino.dy = CONFIG.jumpPower;
+          dino.jumping = true;
+        }
+      } else {
+        if (dino.jumpsRemaining > 0) {
+          dino.dy = CONFIG.jumpPower;
+          dino.jumpsRemaining -= 1;
+          dino.jumping = true;
+        }
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') jump();
+      if (e.code === 'KeyP') setPaused(!paused);
+      if (e.code === 'KeyR') { resetGame(); setPaused(false); }
+    });
+    document.getElementById('resumeBtn').addEventListener('click', () => setPaused(false));
+    document.getElementById('restartBtn').addEventListener('click', () => { resetGame(); setPaused(false); });
+    canvas.addEventListener('click', jump);
+
+    // Game loop
+    function gameLoop() {
+      // Background
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.fillStyle = CONFIG.background;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.restore();
+
+      if (!paused && !gameOver) {
+        // Update dino physics
+        dino.dy += CONFIG.gravity;
+        dino.y += dino.dy;
+      }
+
+      // Ground collision
+      if (dino.y > 150) {
+        dino.y = 150;
+        dino.dy = 0;
+        dino.jumping = false;
+        dino.jumpsRemaining = CONFIG.doubleJump ? 2 : 1;
+      }
+
+      // Draw dino
+      dino.color = CONFIG.dinoColor;
+      ctx.fillStyle = dino.color;
+      ctx.fillRect(dino.x, dino.y, dino.width, dino.height);
+
+      // Ground
+      ctx.strokeStyle = CONFIG.groundColor;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, 190);
+      ctx.lineTo(canvas.width, 190);
+      ctx.stroke();
+
+      // Clouds
+      if (!paused && Math.random() < 0.01) {
+        clouds.push({ x: canvas.width + 20, y: 30 + Math.random() * 60, speed: 0.5 + Math.random(), size: 30 + Math.random() * 30 });
+      }
+      ctx.fillStyle = '#e3e3e3';
+      for (let i = clouds.length - 1; i >= 0; i--) {
+        const c = clouds[i];
+        if (!paused) c.x -= c.speed;
+        ctx.beginPath();
+        ctx.arc(c.x, c.y, c.size * 0.4, 0, Math.PI * 2);
+        ctx.arc(c.x + c.size * 0.4, c.y + 5, c.size * 0.35, 0, Math.PI * 2);
+        ctx.arc(c.x - c.size * 0.4, c.y + 5, c.size * 0.35, 0, Math.PI * 2);
+        ctx.fill();
+        if (c.x + c.size < 0) clouds.splice(i, 1);
+      }
+
+      // Spawn obstacles
+      if (!paused && !gameOver) {
+        frameCount++;
+        if (frameCount % CONFIG.obstacleSpawnRate === 0) {
+          obstacles.push({
+            x: canvas.width,
+            y: 170,
+            width: CONFIG.obstacleWidth,
+            height: CONFIG.obstacleHeight,
+            color: CONFIG.obstacleColor
+          });
+        }
+      }
+
+      // Update and draw obstacles
+      obstacles.forEach((obs, index) => {
+        if (!paused && !gameOver) obs.x -= CONFIG.gameSpeed;
+
+        ctx.fillStyle = obs.color;
+        ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+
+        if (!paused && !gameOver) {
+          // Remove off-screen obstacles
+          if (obs.x + obs.width < 0) {
+            obstacles.splice(index, 1);
+            score++;
+            if (score > highScore) { highScore = score; }
+            document.getElementById('score').textContent = 'Score: ' + score;
+            document.getElementById('high').textContent = 'High: ' + highScore;
+          }
+
+          // Collision detection
+          if (
+            dino.x < obs.x + obs.width &&
+            dino.x + dino.width > obs.x &&
+            dino.y < obs.y + obs.height &&
+            dino.y + dino.height > obs.y
+          ) {
+            gameOver = true;
+            setPaused(true);
+          }
+        }
+      });
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    gameLoop();
+  </script>
+</body>
+</html>
+
