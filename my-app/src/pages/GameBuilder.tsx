@@ -13,10 +13,12 @@ function GameBuilder() {
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const templates = [
-    "Make the dino jump higher",
-    "Change dino color to blue",
-    "Make obstacles move faster",
-    "Add double jump ability",
+    "Add random obstacles with different shapes",
+    "Add bouncing obstacles",
+    "Make it super hard mode",
+    "Add flying obstacles",
+    "Add golden power-ups",
+    "Make obstacles colorful",
   ];
 
   const sendMessage = async (text: string) => {
@@ -151,3 +153,4 @@ function GameBuilder() {
 
 export default GameBuilder;
 
+ 

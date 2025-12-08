@@ -27,6 +27,44 @@ const tools = [
       },
     },
   },
+  {
+    type: "function" as const,
+    function: {
+      name: "add_obstacle_type",
+      description: "Add a new obstacle type to the game with custom properties. This creates variety - obstacles will be randomly chosen from all types.",
+      parameters: {
+        type: "object",
+        properties: {
+          width: {
+            type: "number",
+            description: "Width of the obstacle (e.g., 30, 60)",
+          },
+          height: {
+            type: "number",
+            description: "Height of the obstacle (e.g., 40, 80)",
+          },
+          color: {
+            type: "string",
+            description: "Color as hex code (e.g., '#ff0000')",
+          },
+          shape: {
+            type: "string",
+            description: "Shape type: 'rect', 'circle', or 'triangle'",
+            enum: ["rect", "circle", "triangle"],
+          },
+          y: {
+            type: "number",
+            description: "Y position (170 is ground level, lower numbers are higher)",
+          },
+          bounceSpeed: {
+            type: "number",
+            description: "If set, obstacle bounces vertically (e.g., 8 for bouncing)",
+          },
+        },
+        required: ["width", "height", "color", "shape"],
+      },
+    },
+  },
 ];
 
 const handler: Handler = async (event) => {
@@ -39,27 +77,25 @@ const handler: Handler = async (event) => {
       messages: [
         {
           role: "system",
-          content: `You are a helpful game developer assistant for a Dino Runner.
+          content: `You are a creative game developer assistant for a Dino Runner game!
 
-Use the tool to change properties. Prefer these keys that map to CONFIG in the game's code:
-- dino.color (hex color) -> CONFIG.dinoColor
-- gravity (number) -> CONFIG.gravity
-- gameSpeed (number) -> CONFIG.gameSpeed
-- jumpPower (number, negative for higher jump) -> CONFIG.jumpPower
-- background (hex color) -> CONFIG.background
-- groundColor (hex color) -> CONFIG.groundColor
-- obstacle.color (hex color) -> CONFIG.obstacleColor
-- obstacle.spawnRate (frames between spawns) -> CONFIG.obstacleSpawnRate
-- obstacle.width (number) -> CONFIG.obstacleWidth
-- obstacle.height (number) -> CONFIG.obstacleHeight
-- doubleJump (true/false) -> CONFIG.doubleJump
+**Be Creative!** When users ask for things like "add random obstacles" or "make it more interesting":
+- Add multiple obstacle types with different shapes (circles, triangles, rectangles)
+- Vary sizes, colors, and heights
+- Add bouncing obstacles (use bounceSpeed parameter)
+- Mix tall obstacles, short obstacles, flying obstacles (higher Y values)
 
-Examples:
-"Make dino blue" -> {property:"dino.color", value:"#0000ff"}
-"Make game super fast" -> {property:"gameSpeed", value:"8"}
-"Add double jump" -> {property:"doubleJump", value:"true"}
+**Tools:**
+1. modify_game_property - Change basic settings
+2. add_obstacle_type - Add NEW varied obstacle types
 
-Always reply with a short friendly description of what changed.`,
+**Examples:**
+- "Add random obstacles" -> Create 3-5 different obstacle types with varied shapes/sizes/colors
+- "Make obstacles bounce" -> Add obstacles with bounceSpeed: 8
+- "Add flying obstacles" -> Create obstacles with y: 120
+- "Make it harder" -> Increase speed, add more obstacle variety
+
+Always be creative and add variety!`,
         },
         ...(Array.isArray(messages) ? messages : []),
       ],
@@ -71,12 +107,34 @@ Always reply with a short friendly description of what changed.`,
     const summaries: string[] = [];
 
     if ((assistantMessage as any).tool_calls) {
-      for (const toolCall of (assistantMessage as any).tool_calls) {
-        if (toolCall.function.name === "modify_game_property") {
-          const args = JSON.parse(toolCall.function.arguments || "{}");
+      const gamePath = path.join(process.cwd(), "public", "dino-game.html");
+      let gameCode = fs.readFileSync(gamePath, "utf-8");
 
-          const gamePath = path.join(process.cwd(), "public", "dino-game.html");
-          let gameCode = fs.readFileSync(gamePath, "utf-8");
+      for (const toolCall of (assistantMessage as any).tool_calls) {
+        const args = JSON.parse(toolCall.function.arguments || "{}");
+
+        if (toolCall.function.name === "add_obstacle_type") {
+          // Add a new obstacle type to the obstacleTypes array
+          const obstacleType = {
+            width: args.width || 50,
+            height: args.height || 50,
+            color: args.color || '#ff5252',
+            y: args.y || 170,
+            shape: args.shape || 'rect',
+            bounceSpeed: args.bounceSpeed || 0
+          };
+
+          const obstacleStr = JSON.stringify(obstacleType);
+          const re = /obstacleTypes:\s*\[([\s\S]*?)\]/;
+          const match = gameCode.match(re);
+          if (match) {
+            const currentArray = match[1].trim();
+            const newArray = currentArray ? `${currentArray},\n        ${obstacleStr}` : obstacleStr;
+            gameCode = gameCode.replace(re, `obstacleTypes: [\n        ${newArray}\n      ]`);
+            summaries.push(`Added ${args.shape} obstacle (${args.width}x${args.height}, ${args.color})`);
+            gameModified = true;
+          }
+        } else if (toolCall.function.name === "modify_game_property") {
 
           // Helper to set CONFIG.* safely
           const setConfigValue = (key: string, rawValue: string, isString: boolean) => {
@@ -145,11 +203,15 @@ Always reply with a short friendly description of what changed.`,
           }
 
           if (applied.length > 0) {
-            fs.writeFileSync(gamePath, gameCode);
             gameModified = true;
             summaries.push(`Updated ${applied.join(', ')}`);
           }
         }
+      }
+
+      // Write the modified game code once after all tool calls
+      if (gameModified) {
+        fs.writeFileSync(gamePath, gameCode);
       }
     }
 

@@ -76,7 +76,18 @@
       obstacleSpawnRate: 60,
       obstacleWidth: 50,
       obstacleHeight: 50,
-      doubleJump: true};
+      doubleJump: false,
+      // Obstacle types array - AI can add new types here
+      obstacleTypes: [
+        { width: 50, height: 50, color: '#ff5252', y: 170, shape: 'rect' },
+        {"width":50,"height":50,"color":"#FFD700","y":150,"shape":"circle","bounceSpeed":0},
+        {"width":40,"height":60,"color":"#FFD700","y":150,"shape":"rect","bounceSpeed":0},
+        {"width":60,"height":40,"color":"#FFD700","y":150,"shape":"triangle","bounceSpeed":0},
+        {"width":30,"height":30,"color":"#FFD700","y":170,"shape":"circle","bounceSpeed":0}
+      ],
+      // Power-ups array
+      powerUps: []
+    };
     // CONFIG_END
 
     // Runtime state
@@ -206,22 +217,56 @@
       if (!paused && !gameOver) {
         frameCount++;
         if (frameCount % CONFIG.obstacleSpawnRate === 0) {
+          // Pick a random obstacle type if multiple exist
+          const types = CONFIG.obstacleTypes.length > 0 ? CONFIG.obstacleTypes :
+            [{ width: CONFIG.obstacleWidth, height: CONFIG.obstacleHeight, color: CONFIG.obstacleColor, y: 170, shape: 'rect' }];
+          const type = types[Math.floor(Math.random() * types.length)];
+
           obstacles.push({
             x: canvas.width,
-            y: 170,
-            width: CONFIG.obstacleWidth,
-            height: CONFIG.obstacleHeight,
-            color: CONFIG.obstacleColor
+            y: type.y || 170,
+            width: type.width,
+            height: type.height,
+            color: type.color,
+            shape: type.shape || 'rect',
+            dy: type.dy || 0,
+            bounceSpeed: type.bounceSpeed || 0
           });
         }
       }
 
       // Update and draw obstacles
       obstacles.forEach((obs, index) => {
-        if (!paused && !gameOver) obs.x -= CONFIG.gameSpeed;
+        if (!paused && !gameOver) {
+          obs.x -= CONFIG.gameSpeed;
+
+          // Handle bouncing obstacles
+          if (obs.bounceSpeed) {
+            obs.dy = obs.dy || 0;
+            obs.dy += 0.3;
+            obs.y += obs.dy;
+            if (obs.y > 170) {
+              obs.y = 170;
+              obs.dy = -obs.bounceSpeed;
+            }
+          }
+        }
 
         ctx.fillStyle = obs.color;
-        ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+        if (obs.shape === 'circle') {
+          ctx.beginPath();
+          ctx.arc(obs.x + obs.width/2, obs.y + obs.height/2, obs.width/2, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (obs.shape === 'triangle') {
+          ctx.beginPath();
+          ctx.moveTo(obs.x + obs.width/2, obs.y);
+          ctx.lineTo(obs.x, obs.y + obs.height);
+          ctx.lineTo(obs.x + obs.width, obs.y + obs.height);
+          ctx.closePath();
+          ctx.fill();
+        } else {
+          ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+        }
 
         if (!paused && !gameOver) {
           // Remove off-screen obstacles
